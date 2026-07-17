@@ -42,6 +42,8 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -551,6 +553,35 @@ public class JDBCMetadataTest {
             Assertions.assertNotNull(executors.iterator().next(),
                     "Executor should be the shared static instance");
 
+        } finally {
+            Config.jdbc_network_timeout_ms = originalTimeoutMs;
+        }
+    }
+
+    @Test
+    public void testGetConnectionToleratesSQLFeatureNotSupportedFromSetNetworkTimeout() throws SQLException {
+        // BigQuery JDBC driver throws SQLFeatureNotSupportedException from setNetworkTimeout().
+        // getConnection() must catch it silently and return the connection — not propagate the error.
+        long originalTimeoutMs = Config.jdbc_network_timeout_ms;
+        try {
+            Config.jdbc_network_timeout_ms = 5000;
+            new Expectations() {
+                {
+                    connection.setNetworkTimeout((Executor) any, anyInt);
+                    result = new SQLFeatureNotSupportedException("Driver does not support setNetworkTimeout");
+
+                    connection.getMetaData().getCatalogs();
+                    result = dbResult;
+                    minTimes = 0;
+                }
+            };
+
+            JDBCMetadata jdbcMetadata = new JDBCMetadata(properties, "catalog", dataSource);
+            dbResult.beforeFirst();
+            // Must succeed — SQLFeatureNotSupportedException is tolerated, connection is reused
+            List<String> result = jdbcMetadata.listDbNames(new ConnectContext());
+            Assertions.assertEquals(Lists.newArrayList("test"), result,
+                    "listDbNames must succeed when setNetworkTimeout throws SQLFeatureNotSupportedException");
         } finally {
             Config.jdbc_network_timeout_ms = originalTimeoutMs;
         }
