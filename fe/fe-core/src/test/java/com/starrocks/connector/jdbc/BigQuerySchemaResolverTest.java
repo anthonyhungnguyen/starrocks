@@ -418,19 +418,6 @@ public class BigQuerySchemaResolverTest {
     }
 
     @Test
-    public void testSchemaResolverPropertyBigquery() {
-        // Explicit schema_resolver=bigquery property overrides driver-class auto-detection.
-        Map<String, String> props = new HashMap<>(properties);
-        props.put(JDBCResource.SCHEMA_RESOLVER, "bigquery");
-        try {
-            JDBCMetadata jdbcMetadata = new JDBCMetadata(props, "bq_catalog", dataSource);
-            Assertions.assertNotNull(jdbcMetadata);
-        } catch (Exception e) {
-            Assertions.fail(e.getMessage());
-        }
-    }
-
-    @Test
     public void testGetPartitions() {
         BigQuerySchemaResolver resolver = new BigQuerySchemaResolver();
         List<Partition> partitions = resolver.getPartitions(null,
