@@ -5,8 +5,8 @@
 # Build from the git repo root directory:
 #   docker build --platform linux/amd64 \
 #     -f docker/dockerfiles/be/cn-bigquery-overlay.Dockerfile \
-#     -t <registry>/starrocks-cn:4.1.1-jdbc-gbq-hungnp .
-ARG BASE=starrocks/cn-ubuntu:4.1.1
+#     -t <registry>/starrocks-cn:4.1.3-jdbc-gbq-hungnp .
+ARG BASE=starrocks/cn-ubuntu:4.1.3
 FROM ${BASE}
 ARG STARROCKS_ROOT=/opt/starrocks
 
