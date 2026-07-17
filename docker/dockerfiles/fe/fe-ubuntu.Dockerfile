@@ -88,8 +88,11 @@ COPY --from=artifacts --chown=$USER:$GROUP /release/fe_artifacts/ $STARROCKS_ROO
 # Copy fe k8s scripts to the runtime container image
 COPY --chown=$USER:$GROUP docker/dockerfiles/fe/*.sh $STARROCKS_ROOT/
 
-# Bake in the BigQuery JDBC driver so catalogs can use driver_url=file://...
-COPY --chown=$USER:$GROUP docker/drivers/bigquery-jdbc-1.7.0-all.jar $STARROCKS_ROOT/jdbc-drivers/bigquery-jdbc-1.7.0-all.jar
+# Bake in the shaded BigQuery JDBC driver (all deps relocated to srbq.* to avoid
+# classpath collisions). FE resolves JDBC drivers from its own classpath, so the
+# jar goes into fe/lib; the jdbc-drivers copy serves as the driver_url target.
+COPY --chown=$USER:$GROUP docker/drivers/bigquery-jdbc-shaded-1.7.0.jar $STARROCKS_ROOT/fe/lib/bigquery-jdbc-shaded-1.7.0.jar
+COPY --chown=$USER:$GROUP docker/drivers/bigquery-jdbc-shaded-1.7.0.jar $STARROCKS_ROOT/jdbc-drivers/bigquery-jdbc-shaded-1.7.0.jar
 
 # Create directory for FE metadata
 RUN mkdir -p $STARROCKS_ROOT/fe/meta

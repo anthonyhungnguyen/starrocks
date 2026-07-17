@@ -75,17 +75,20 @@ public class BigQuerySchemaResolver extends JDBCSchemaResolver {
 
     @Override
     public ResultSet getTables(Connection connection, String dbName) throws SQLException {
-        return connection.getMetaData().getTables(connection.getCatalog(), dbName, null, defaultTableTypes);
+        // Pass null (JDBC: "current catalog") instead of connection.getCatalog():
+        // Simba driver 1.7.0 returns an empty result whenever an explicit catalog
+        // string is supplied to getTables/getColumns.
+        return connection.getMetaData().getTables(null, dbName, null, defaultTableTypes);
     }
 
     @Override
     public ResultSet getTables(Connection connection, String dbName, String tblName) throws SQLException {
-        return connection.getMetaData().getTables(connection.getCatalog(), dbName, tblName, defaultTableTypes);
+        return connection.getMetaData().getTables(null, dbName, tblName, defaultTableTypes);
     }
 
     @Override
     public ResultSet getColumns(Connection connection, String dbName, String tblName) throws SQLException {
-        return connection.getMetaData().getColumns(connection.getCatalog(), dbName, tblName, "%");
+        return connection.getMetaData().getColumns(null, dbName, tblName, "%");
     }
 
     // -------------------------------------------------------------------------
